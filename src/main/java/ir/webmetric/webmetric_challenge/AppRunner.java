@@ -49,54 +49,57 @@ public class AppRunner implements ApplicationRunner {
         List<Click> clicks = clicksLoader.load(clicksFile);
         List<Impression> impressions = impressionsLoader.load(impressionsFile);
         Collection<PointTwoAggregation> aggs1 = clickToImpression(clicks, impressions);
-      if (runBenchmark){
-          Collection<PointTwoAggregation> aggs2 = clickToImpressionWithStreams(clicks, impressions);
-          benchmarkFor(clicks, impressions);
-          benchmarkStream(clicks, impressions);
+        if (runBenchmark) {
+            Collection<PointTwoAggregation> aggs2 = clickToImpressionWithStreams(clicks, impressions);
+            String benchmarkFor = benchmarkFor(clicks, impressions);
+            String benchmarkStream = benchmarkStream(clicks, impressions);
 
-          if (aggs1.size() == aggs2.size() && aggs1.containsAll(aggs2) && aggs2.containsAll(aggs1)) {
-              log.info("implementations are the same");
-          } else {
-              log.error("implementations are not the same");
-          }
-      }
+            log.info("##################### Benchmark result #####################");
+            log.info(benchmarkFor);
+            log.info(benchmarkStream);
+
+            if (aggs1.size() == aggs2.size() && aggs1.containsAll(aggs2) && aggs2.containsAll(aggs1)) {
+                log.info("implementations are the same");
+            } else {
+                log.error("implementations are not the same");
+            }
+        }
         serialize(aggs1);
 
     }
 
-    private void benchmarkFor(List<Click> clicks, List<Impression> impressions) {
+    private String benchmarkFor(List<Click> clicks, List<Impression> impressions) {
 
         double avgTime = 0.0;
         int size = 0;
         for (int i = 0; i < 100; i++) {
             long startTime = System.currentTimeMillis();
             Collection<PointTwoAggregation> aggs = clickToImpression(clicks, impressions);
+            // reading the aggs to prevent possible runtime optimisations
             size = aggs.size();
 
             long endTime = System.currentTimeMillis();
             long execTime = endTime - startTime;
             avgTime += (double) execTime / 100;
         }
-        log.info("Avg time with SingleThread For loop in 100 rounds: {}   , size:{}", avgTime, size);
 
-
+        return String.format("Avg time with SingleThread For loop in 100 rounds: %,f  ms , size:%d", avgTime, size);
     }
 
-    private void benchmarkStream(List<Click> clicks, List<Impression> impressions) {
+    private String benchmarkStream(List<Click> clicks, List<Impression> impressions) {
 
         double avgTime = 0.0;
         int size = 0;
         for (int i = 0; i < 100; i++) {
             long startTime = System.currentTimeMillis();
             Collection<PointTwoAggregation> aggs = clickToImpressionWithStreams(clicks, impressions);
+            // reading the aggs to prevent possible runtime optimisations
             size = aggs.size();
             long endTime = System.currentTimeMillis();
             long execTime = endTime - startTime;
             avgTime += (double) execTime / 100;
         }
-        log.info("Avg time with Parallel Stream in 100 rounds: {}   , size:{}", avgTime, size);
-
-
+        return String.format("Avg time with Parallel Stream in 100 rounds: %,f ms , size:%d", avgTime, size);
     }
 
     private Collection<PointTwoAggregation> clickToImpression(List<Click> clicks, List<Impression> impressions) {

@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @Component
@@ -22,9 +22,9 @@ public class ClicksLoader {
     }
 
     public List<Click> load(Resource clicksFile) throws IOException {
-        File file = clicksFile.getFile();
+        InputStream inputStream = clicksFile.getInputStream();
 
-        List<Click> clicks = objectMapper.readValue(file, new TypeReference<>() {});
+        List<Click> clicks = objectMapper.readValue(inputStream, new TypeReference<>() {});
 
         log.info("Loaded {} clicks", clicks.size());
         double sum = clicks.stream().mapToDouble(Click::revenue).sum();

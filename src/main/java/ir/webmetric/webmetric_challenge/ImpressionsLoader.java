@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @Component
@@ -22,9 +22,9 @@ public class ImpressionsLoader {
     }
 
     public List<Impression> load(Resource impressionsFile) throws IOException {
-        File file = impressionsFile.getFile();
+        InputStream inputStream = impressionsFile.getInputStream();
 
-        List<Impression> impressions = objectMapper.readValue(file, new TypeReference<>() {});
+        List<Impression> impressions = objectMapper.readValue(inputStream, new TypeReference<>() {});
         impressions = impressions.stream().distinct().toList();
 
         log.info("Loaded {} impressions", impressions.size());
